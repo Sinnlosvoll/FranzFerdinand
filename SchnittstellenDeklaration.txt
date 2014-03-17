@@ -1,0 +1,51 @@
+Programmierung: Englisch
+Kommentare: Deutsch
+
+Sensoren
+	getColor()
+		returns u_int8 black(1) or white(0) 
+
+	touchevent auslösen
+
+Motorsteuerung
+
+	followLine() //fährt bis zur nächsten Kreuzung
+		return done
+
+	surveyCrossing //Kreuzung erkunden
+		return done
+
+	turnLeft() //fährt an Kreuzung links
+		return done
+
+	turnRight() //fährt an Kreuzung rechts
+		return done
+
+	driveBack(u_int8 distance) //wendet und fährt Distanz weiter
+		return done
+
+	turnForward() //fährt an Kreuzung gerade aus
+		return done
+	
+Pfadplanung
+	
+	scout()
+
+	scoutRandom()
+	
+	driveToStart()
+		return done
+
+	scoutForTokens()
+		return done
+	nodeSetDirection(u_int8 direction, u_int8 exists)
+		return done
+
+Variablen
+	u_int8 mazeStorage[14][14]
+		Kreuzungen werden wie folgt gespeichert: siehe Kreuzungen.png
+	u_int8 mazeVisited[14][14]
+		Zeigt an, ob eine Kreuzung(node) bereits erkundet wurde
+
+
+	
