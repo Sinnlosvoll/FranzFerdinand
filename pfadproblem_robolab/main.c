@@ -1,12 +1,13 @@
 #include <stdio.h>
 
-#define left 0x06
-#define top 0x09
-#define down 0x07
-#define right 0x08
+#define top 0x01
+#define right 0x02
+#define down 0x04
+#define left 0x08
+
 #define DEBUG 0x01
 
-char    mazeStorage[13][13];
+char    mazeStorage[14][14];
 char    pathStorage[25];//first char denotes length of current queue
 char    currentPosition[2];
 char    stop = 0;
@@ -53,9 +54,29 @@ void initialize()
     pathStorage[0]=0;
 
 }
+void printPathStorage()
+{
+    signed char pathLength = pathStorage[0];
+    signed char cnt;
+    printf("\nLength of stored path is %i", pathLength);
+    for(cnt=1; cnt<=pathLength+1;cnt++)
+    {
+        switch(pathStorage[cnt]){
+            case 1: printf("\ntop");break;
+            case 2: printf("\nright");break;
+            case 4: printf("\ndown");break;
+            case 8: printf("\nleft");break;
+        }
+
+
+    }
+}
+
 void addToPath(char direction)
 {
-    pathStorage[(int)pathStorage[0]+1]=direction;
+    printf("\n added %i to path",direction);
+    pathStorage[0]++;
+    pathStorage[(int)pathStorage[0]]=direction;
 }
 
 int hasDirection(char direction,unsigned char x,unsigned char y)
@@ -101,9 +122,12 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
     char mazeEnd[14][14];
     signed char xCurrent;
     signed char yCurrent;
+    signed char startReached = 0;
+    signed char endReached = 0;
     signed char xDistance= xDestination - x1;
     signed char yDistance= yDestination - y1;
     char maxIterations = (xDistance+yDistance)/2+4;//4 is safety padding
+    printf("\n\n\n\nmaxIterations=%i\n\n\n",maxIterations);
     char cntLoops;
     /*if(xDistance*xDistance > yDistance*yDistance)
         {maxIterations = xDistance;}
@@ -133,6 +157,10 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
     int yCounter1=0;
     for(cntLoops=0; cntLoops<=maxIterations*2; cntLoops++)
     {
+        if((startReached==1) && (endReached==1))
+        {
+            cntLoops = (maxIterations*2)+1;
+        }
         //***************************set mazeStart's values ///         checks now if values overflow :D
 
 
@@ -141,6 +169,7 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
         {
             for(rowY=13;rowY>=0;rowY--)
             {
+                if(mazeStart[xDestination][yDestination]!=0){endReached = 1;break;};
                 //check if the field has the path to the adjecant field
                 l=r=t=d=0;
                 if((hasDirection(left,colX,rowY)==1)  && (mazeStart[colX-1][rowY] != 0))
@@ -164,6 +193,7 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
                         d=mazeStart[colX][rowY-1]-1;
                 }
                 mazeStart[colX][rowY]=getLargestGreaterZero(l,t,r,d,mazeStart[colX][rowY]);
+
             }
         }
         //*************************** set mazeEnd's values
@@ -171,6 +201,7 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
         {
             for(rowY=13;rowY>=0;rowY--)
             {
+                if((mazeEnd[x1][y1]!=0)){startReached = 1;break;};
                 l=r=t=d=0;
                 if((hasDirection(left,colX,rowY)==1)  && (mazeEnd[colX-1][rowY] != 0))
                 {
@@ -252,21 +283,24 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
     signed char pathValue = mazeStart[x1][y1];
     mazeEnd[xCurrent][yCurrent]=1;                 //repurposing mazeEnd to store already visited Nodes
 
-    /*while((xCurrent!=xDestination) && (yCurrent != yDestination))
+    if(endReached==1)
     {
-        if(xDisLeft>0)
+        while((xCurrent!=xDestination) || (yCurrent != yDestination))
         {
-            if(hasDirection(right,xCurrent,yCurrent) && (mazeStart[xCurrent+1][yCurrent]==pathValue))
+            if((xDisLeft>0)||(((mazeEnd[xCurrent-1][yCurrent]==1)||(mazeStart[xCurrent-1][yCurrent]!=pathValue))&&((mazeEnd[xCurrent][yCurrent+1]==1)||(mazeStart[xCurrent][yCurrent+1]!=pathValue))&&((mazeEnd[xCurrent][yCurrent-1]==1)||(mazeStart[xCurrent][yCurrent-1]!=pathValue))))
             {
-                addToPath(right);
-                mazeEnd[xCurrent][yCurrent]=1;
-                xCurrent++;
-                xDisLeft--;
+                if(hasDirection(right,xCurrent,yCurrent) && (mazeStart[xCurrent+1][yCurrent]==pathValue) && (mazeEnd[xCurrent+1][yCurrent]==0))
+                {
+                    addToPath(right);
+                    mazeEnd[xCurrent][yCurrent]=1;
+                    xCurrent++;
+                    xDisLeft--;
+                }
             }
-        }else
-            if(xDisLeft<0)
+
+            if(xDisLeft<0||(((mazeEnd[xCurrent+1][yCurrent]==1)||(mazeStart[xCurrent+1][yCurrent]!=pathValue))&&((mazeEnd[xCurrent][yCurrent+1]==1)||(mazeStart[xCurrent][yCurrent+1]!=pathValue))&&((mazeEnd[xCurrent][yCurrent-1]==1)||(mazeStart[xCurrent][yCurrent-1]!=pathValue))))
             {
-                if(hasDirection(left,xCurrent,yCurrent) && (mazeStart[xCurrent-1][yCurrent]==pathValue))
+                if(hasDirection(left,xCurrent,yCurrent) && (mazeStart[xCurrent-1][yCurrent]==pathValue) && (mazeEnd[xCurrent-1][yCurrent]==0))
                 {
                     addToPath(left);
                     mazeEnd[xCurrent][yCurrent]=1;
@@ -274,28 +308,28 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
                     xDisLeft++;
                 }
             }
-        if(yDisLeft>0)
-        {
-            if(hasDirection(top,xCurrent,yCurrent) && (mazeStart[xCurrent][yCurrent+1]==pathValue))
+            if(yDisLeft>0||(((mazeEnd[xCurrent+1][yCurrent]==1)||(mazeStart[xCurrent+1][yCurrent]!=pathValue))&&((mazeEnd[xCurrent][yCurrent-1]==1)||(mazeStart[xCurrent][yCurrent-1]!=pathValue))&&((mazeEnd[xCurrent-1][yCurrent]==1)||(mazeStart[xCurrent-1][yCurrent]!=pathValue))))
             {
-                addToPath(top);
-                mazeEnd[xCurrent][yCurrent]=1;
-                yCurrent++;
-                yDisLeft--;
-            }
-        }else
-            if(xDisLeft<0)
-            {
-                if(hasDirection(down,xCurrent,yCurrent) && (mazeStart[xCurrent][yCurrent-1 ]==pathValue))
+                if(hasDirection(top,xCurrent,yCurrent) && (mazeStart[xCurrent][yCurrent+1]==pathValue) && (mazeEnd[xCurrent][yCurrent+1]==0))
                 {
-                    addToPath(left);
+                    addToPath(top);
                     mazeEnd[xCurrent][yCurrent]=1;
-                    yCurrent--;
-                    yDisLeft++;
+                    yCurrent++;
+                    yDisLeft--;
                 }
             }
-    }*/
-
+            if(yDisLeft<0||(((mazeEnd[xCurrent+1][yCurrent]==1)||(mazeStart[xCurrent+1][yCurrent]!=pathValue))&&((mazeEnd[xCurrent][yCurrent+1]==1)||(mazeStart[xCurrent][yCurrent+1]!=pathValue))&&((mazeEnd[xCurrent-1][yCurrent]==1)||(mazeStart[xCurrent-1][yCurrent]!=pathValue))))
+            {
+                if(hasDirection(down,xCurrent,yCurrent) && (mazeStart[xCurrent][yCurrent-1]==pathValue) && (mazeEnd[xCurrent][yCurrent-1]==0))
+                    {
+                        addToPath(down);
+                        mazeEnd[xCurrent][yCurrent]=1;
+                        yCurrent--;
+                        yDisLeft++;
+                    }
+            }
+        }
+    }
     return 0; //aka no path found
 }
 
@@ -464,7 +498,7 @@ int getPathTo(char xDestination, char yDestination)
 }
 
 
-void setNode(unsigned char x, unsigned char y,char links, char unten, char rechts, char oben, char visited)
+void setNode(signed char x, signed char y,char links, char unten, char rechts, char oben, char visited)
 {
     char tempStorage;
     char tempCount;
@@ -492,7 +526,8 @@ void setNode(unsigned char x, unsigned char y,char links, char unten, char recht
     {
         if(y>0)
         {
-            mazeStorage[(int)x][(int)y-1] = mazeStorage[(int)x][(int)y-1] | 1;
+            printf("\n setting %i:%i to %i",x,y-1,mazeStorage[x][y-1] | 1);
+            mazeStorage[x][y-1] = mazeStorage[x][y-1] | 1;
         }
         temp += 4;
     }
@@ -607,17 +642,22 @@ int main(void)
     //setNode(x,y,links,unten,rechts,oben,visited);
     printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
     setNode(2,1,1,1,1,1,1);
-    setNode(6,6,1,0,1,0,1);
+    setNode(3,1,1,1,1,1,1);
+    setNode(4,1,1,1,1,1,1);
+    setNode(5,1,1,1,1,1,1);
+    setNode(6,1,1,1,1,0,1);
+    setNode(7,1,1,1,1,0,1);
+    setNode(8,1,1,1,1,0,1);
+    setNode(6,6,1,1,1,0,1);
+    setNode(8,2,1,1,1,1,1);
+    setNode(8,3,1,1,1,1,1);
+    setNode(8,4,1,1,1,1,1);
+    setNode(8,5,1,1,1,0,1);
+    setNode(8,6,1,1,1,0,1);
+    setNode(6,4,1,0,0,1,1);
+
     printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
     //directionOffset =1;//aka 1x rechts
-    setNode(8,8,1,0,0,0,1);
-    setNode(5,5,1,1,1,1,1);
-    setNode(4,1,1,0,1,1,1);
-    setNode(4,3,0,1,1,1,1);
-    setNode(4,4,0,1,1,1,1);
-    setNode(9,9,1,1,1,1,1);
-    setNode(9,7,0,1,0,1,1);
-    setNode(8,6,1,1,1,1,1);
     printf(" ");
     printNodeHelp();
     printf("\n");
@@ -626,9 +666,11 @@ int main(void)
     printNode(4,0);
     printf("\n");
     printNode(2,0);
+    printPathStorage();
     printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
-    getPathComplicated(2,1,9,9);
+    getPathComplicated(2,1,6,4);
     printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    printPathStorage();
     printf("\n");
     return 0;
 }
