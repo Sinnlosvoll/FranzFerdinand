@@ -1,15 +1,15 @@
 #include <stdio.h>
 
-#define top 0x01
-#define right 0x02
-#define down 0x04
+#define top (unsigned char)0x01
+#define right (unsigned char)0x02
+#define down (unsigned char)0x04
 #define left 0x08
 
-#define DEBUG 0x01
+#define DEBUG 0x00
 
 char    mazeStorage[14][14];
 char    pathStorage[25];//first char denotes length of current queue
-char    currentPosition[2];
+signed char    currentPosition[2];
 char    stop = 0;
 char    directionOffset = 0;//number of times turned right
 
@@ -25,15 +25,26 @@ char    directionOffset = 0;//number of times turned right
  *
  */
 
+/* TODO:
+ *
+ * increment visited nbr when setNode is called
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * */
 
-/* PATHPLANNING THOUGHTS
+/* PATHPLANNING THOUGHT0
  *
  * go direction best suited for your goal, minimize larger value of distances
  *
  *
  * alternative: create 2 new strucutres. One from the start and one from the end. The structures
  * contain the number of nodes needed to get there. Overlay both and get the smallest number greater 0 which exists in both structures.
- * Then create 2 path going from start to overlap and from overlap to end. RECURSIVE until special cases abort.
+ * Then create 2 paths going from start to overlap and from overlap to end. RECURSIVE until special cases abort.
  * Cases which will go further and never stop:
  *              the 2 points are the same
  *              the points are next to each other and so they aren't >0 in both cases
@@ -42,7 +53,7 @@ char    directionOffset = 0;//number of times turned right
 void initialize()
 {
     int i,n;
-    /* ALle KReuzungen AUf 0 SEtzen */
+    /* Alle Kreuzungen auf 0 setzen */
     for(i=0; i<=13;i++){
         for(n=0; n<=13;n++){
             mazeStorage[i][n]=0;
@@ -52,8 +63,73 @@ void initialize()
     currentPosition[0] = 6;
     currentPosition[1] = 6;
     pathStorage[0]=0;
+}
+
+char shiftbits(signed char toShift, signed char shiftAmount)
+{
+    signed char temp=0;
+    signed char cnt = 0;
+    for(cnt=0;cnt<shiftAmount;cnt++)
+    {
+        if((toShift&8)==8){temp=1;}else{temp=0;};
+        toShift= toShift << 1;
+        toShift= toShift % 16;
+        toShift = toShift + temp;
+    }
+
+    return toShift;
+}
+
+void hasMoved(unsigned char direction)
+{
+    //changes currentPosition according to direction WITH directional offset
+    direction = shiftbits(direction,directionOffset);
+
+    if(direction == top )
+        currentPosition[1]++;
+
+    if(direction == right )
+        currentPosition[0]++;
+
+    if(direction == down )
+        currentPosition[1]--;
+
+    if(direction == left)
+        currentPosition[0]--;
+
 
 }
+
+char getNextDirection(){//note to self: change current position when direction got requiested to new postion when drive is completed
+   if(pathStorage[0])
+   {
+        pathStorage[0]--;
+        switch(pathStorage[1])
+        {
+            case 0x01: hasMoved(top);break;
+            case 0x02: hasMoved(right);directionOffset++;break;
+            case 0x04: hasMoved(down);directionOffset= directionOffset+2;break;
+            case 0x08: hasMoved(left);directionOffset= directionOffset+3;break;
+        }
+        directionOffset = directionOffset % 4;
+        return pathStorage[1];
+   }
+   return 0;
+}
+
+char hasBeenVisitedRelative(signed char direction)
+{//TODO: test, srsly test the fuck out of that stuff
+    direction=shiftbits(direction,directionOffset);
+
+    return (mazeStorage[currentPosition[0]][currentPosition[1]] & direction);
+}
+
+
+char visited(signed char x, signed char y){
+    return (mazeStorage[x][y]>>4);
+}
+
+
 void printPathStorage()
 {
     signed char pathLength = pathStorage[0];
@@ -74,7 +150,7 @@ void printPathStorage()
 
 void addToPath(char direction)
 {
-    printf("\n added %i to path",direction);
+    if(DEBUG){printf("\n added %i to path",direction);};
     pathStorage[0]++;
     pathStorage[(int)pathStorage[0]]=direction;
 }
@@ -127,7 +203,7 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
     signed char xDistance= xDestination - x1;
     signed char yDistance= yDestination - y1;
     char maxIterations = (xDistance+yDistance)/2+4;//4 is safety padding
-    printf("\n\n\n\nmaxIterations=%i\n\n\n",maxIterations);
+    if(DEBUG){printf("\n\n\n\nmaxIterations=%i\n\n\n",maxIterations);};
     char cntLoops;
     /*if(xDistance*xDistance > yDistance*yDistance)
         {maxIterations = xDistance;}
@@ -227,52 +303,57 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
 
             }
         }
-        for(yCounter1=13;yCounter1>=0;yCounter1--)
+        if(DEBUG)
         {
+            for(yCounter1=13;yCounter1>=0;yCounter1--)
+            {
             //print maze Start
             for(xCounter1=0;xCounter1<=13;xCounter1++)
-            {
-                if(mazeStart[xCounter1][yCounter1]==0)
                 {
-                    printf(" %2c",250);
-                }else{
-                    printf(" %2i",mazeStart[xCounter1][yCounter1]);
+                    if(mazeStart[xCounter1][yCounter1]==0)
+                    {
+                        printf(" %2c",250);
+                    }else{
+                        printf(" %2i",mazeStart[xCounter1][yCounter1]);
+                    }
                 }
-            }
-            printf("  ");
-            //pritn maze end
-            for(xCounter1=0;xCounter1<=13;xCounter1++)
-            {
-                if(mazeEnd[xCounter1][yCounter1]==0)
+                printf("  ");
+                //pritn maze end
+                for(xCounter1=0;xCounter1<=13;xCounter1++)
                 {
-                    printf(" %2c",250);
-                }else
-                {
-                    printf(" %2i",mazeEnd[xCounter1][yCounter1]);
+                    if(mazeEnd[xCounter1][yCounter1]==0)
+                    {
+                        printf(" %2c",250);
+                    }else
+                    {
+                        printf(" %2i",mazeEnd[xCounter1][yCounter1]);
+                    }
                 }
+                printf("\n");
             }
-            printf("\n");
         }
     }
-    //print values both matrixes now pushed into mazeStart
+    //print values both matrixes now added into mazeStart
     int ty, tx;
     tx=ty=0;
-    printf("\n");
+    if(DEBUG){printf("\n");}
     for(ty=13; ty>=0; ty--)
     {
         for(tx=0; tx<=13; tx++)
         {
             mazeStart[tx][ty]=mazeStart[tx][ty]+mazeEnd[tx][ty];
             mazeEnd[tx][ty]=0;
-            if(mazeStart[tx][ty]==0)
-            {
-                printf(" %2c",250);
-            }else
-            {
-                printf(" %2i",mazeStart[tx][ty]);
-            }
+            if(DEBUG){
+                if(mazeStart[tx][ty]==0)
+                {
+                    printf(" %2c",250);
+                }else
+                {
+                    printf(" %2i",mazeStart[tx][ty]);
+                }
+            };
         }
-        printf("\n");
+        if(DEBUG){printf("\n");};
     }
     //now add way of highest numbers to path so it can be printed or driven
 
@@ -526,7 +607,7 @@ void setNode(signed char x, signed char y,char links, char unten, char rechts, c
     {
         if(y>0)
         {
-            printf("\n setting %i:%i to %i",x,y-1,mazeStorage[x][y-1] | 1);
+            if(DEBUG){printf("\n setting %i:%i to %i",x,y-1,mazeStorage[x][y-1] | 1);};
             mazeStorage[x][y-1] = mazeStorage[x][y-1] | 1;
         }
         temp += 4;
@@ -640,7 +721,8 @@ int main(void)
     initialize();
 
     //setNode(x,y,links,unten,rechts,oben,visited);
-    printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    //printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+
     setNode(2,1,1,1,1,1,1);
     setNode(3,1,1,1,1,1,1);
     setNode(4,1,1,1,1,1,1);
@@ -655,22 +737,25 @@ int main(void)
     setNode(8,5,1,1,1,0,1);
     setNode(8,6,1,1,1,0,1);
     setNode(6,4,1,0,0,1,1);
-
+    currentPosition[0]=6;
+    currentPosition[1]=1;
+    printf("\n%i",hasBeenVisitedRelative(right));
     printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
     //directionOffset =1;//aka 1x rechts
-    printf(" ");
-    printNodeHelp();
-    printf("\n");
-    printNode(4,1);
-    printf("\n");
-    printNode(4,0);
-    printf("\n");
-    printNode(2,0);
-    printPathStorage();
-    printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
-    getPathComplicated(2,1,6,4);
-    printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
-    printPathStorage();
+    //printf(" ");
+    //printNodeHelp();
+    //printf("\n");
+    //printNode(4,1);
+    //printf("\n");
+    //printNode(4,0);
+    //printf("\n");
+    //printNode(2,0);
+    //printPathStorage();
+    //printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    //getPathComplicated(2,1,6,4);
+    //printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    //printPathStorage();
+
     printf("\n");
     return 0;
 }
