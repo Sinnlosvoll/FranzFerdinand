@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#define top (unsigned char)0x01
-#define right (unsigned char)0x02
-#define down (unsigned char)0x04
+#define top 0x01
+#define right 0x02
+#define down 0x04
 #define left 0x08
 
 #define DEBUG 0x00
@@ -37,17 +37,12 @@ char    directionOffset = 0;//number of times turned right
  *
  * */
 
-/* PATHPLANNING THOUGHT0
+/* PATHPLANNING 
  *
- * go direction best suited for your goal, minimize larger value of distances
- *
- *
- * alternative: create 2 new strucutres. One from the start and one from the end. The structures
- * contain the number of nodes needed to get there. Overlay both and get the smallest number greater 0 which exists in both structures.
- * Then create 2 paths going from start to overlap and from overlap to end. RECURSIVE until special cases abort.
- * Cases which will go further and never stop:
- *              the 2 points are the same
- *              the points are next to each other and so they aren't >0 in both cases
+ * 
+ * NOW MAIN PATHPLANNING: create 2 new strucutres. One from the start and one from the end. The structures
+ * contain the number of (50-x) steps needed to get there. Overlay both and get the highest number greaters. These mark the optimal path.
+ * 
  */
 
 void initialize()
@@ -119,16 +114,35 @@ char getNextDirection(){//note to self: change current position when direction g
 
 char hasBeenVisitedRelative(signed char direction)
 {//TODO: test, srsly test the fuck out of that stuff
-    direction=shiftbits(direction,directionOffset);
 
-    return (mazeStorage[currentPosition[0]][currentPosition[1]] & direction);
+    direction=shiftbits(direction,directionOffset);//seems to work so far :D
+
+	switch (direction){
+	case 0x01: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x04);
+	case 0x02: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x08);
+	case 0x04: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x01);
+	case 0x08: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x02);
+	default: return(0);//stupid conventions. I know what I do -.-
+	}
+
+    
 }
 
+void printCurrentPositionInfo()
+{
+
+	printf("\npos:%i:%i||Direction:",currentPosition[0],currentPosition[1]);
+	switch (directionOffset){
+	case 0x00: printf("North"); break;
+	case 0x01: printf("East"); break;
+	case 0x02: printf("South"); break;
+	case 0x03: printf("West"); break;
+	}
+}
 
 char visited(signed char x, signed char y){
     return (mazeStorage[x][y]>>4);
 }
-
 
 void printPathStorage()
 {
@@ -177,6 +191,7 @@ int hasDirection(char direction,unsigned char x,unsigned char y)
     }
     return 0; // FAlls DAs PAssieren SOllte: WUT? FAlscher KNoten oder pfadabfrage und richtige richtung gewählt
 }
+
 int getLargestGreaterZero(char c1, char c2, char c3, char c4, char own){
     if((c1>=0) && (c1>=c2) && (c1>=c3) && (c1>=c4) && (c1>=own))
     {return c1;}
@@ -414,8 +429,7 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
     return 0; //aka no path found
 }
 
-
-int getPathTo(char xDestination, char yDestination)
+int getPathTo(char xDestination, char yDestination)//more or less outdated, still usable for a fewer arguments call
 {
     signed char x1 = currentPosition[0];
     signed char y1 = currentPosition[1];
@@ -577,7 +591,6 @@ int getPathTo(char xDestination, char yDestination)
 
 
 }
-
 
 void setNode(signed char x, signed char y,char links, char unten, char rechts, char oben, char visited)
 {
@@ -755,7 +768,12 @@ int main(void)
     //getPathComplicated(2,1,6,4);
     //printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
     //printPathStorage();
+	printCurrentPositionInfo();
+	directionOffset++;
+	printCurrentPositionInfo();
+	printf("\n%i\n", hasBeenVisitedRelative(right));
 
+	printNode(6, 1);
     printf("\n");
     return 0;
 }
