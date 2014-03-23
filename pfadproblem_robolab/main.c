@@ -7,12 +7,32 @@
 
 #define DEBUG 0x00
 
-char    mazeStorage[14][14];
-char    pathStorage[25];//first char denotes length of current queue
-signed char    currentPosition[2];
+unsigned char    mazeStorage[14][14];
+unsigned char    pathStorage[25];//first char denotes length of current queue
+unsigned char    currentPosition[2];
 char    stop = 0;
-char    directionOffset = 0;//number of times turned right
+signed   char    directionOffset = 0;//number of times turned right
 
+/* FUNction prototypes */
+
+void initialize();
+signed char shiftbits(signed char toShift, signed char shiftAmount);
+void hasMoved(unsigned char direction);
+signed char getNextDirection();
+signed char hasBeenVisitedRelative(signed char direction);
+signed char visited(signed char x, signed char y);
+void addToPath(char direction);
+signed char hasDirection(char direction, unsigned char x, unsigned char y);
+signed char getLargestValue(char c1, char c2, char c3, char c4, char own);
+signed char getPathComplicated(signed char x1, signed char y1, signed char xDestination, signed char yDestination);
+signed char getPathTo(char xDestination, char yDestination);
+void setNode(signed char x, signed char y, char links, char unten, char rechts, char oben, char visited);
+void setCurrentNode(char links, char unten, char rechts, char oben);
+void printPathStorage();
+void printNodeHelp();
+void printNode(char x, char y);
+void printEVERYTHINGASBITMAP_FORCOMMANDLINE_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+void printFieldAsNumbers();
 
 /* abstract:
  * setting a node seems to work for now, further investigation is advised
@@ -54,14 +74,20 @@ void initialize()
             mazeStorage[i][n]=0;
         }
     }
-    /* STartkreuzung AUf 7,7 SEtzen */
+    /* STartkreuzung AUf 6,6 SEtzen */
     currentPosition[0] = 6;
     currentPosition[1] = 6;
-    pathStorage[0]=0;
+
+	for(i=0;i<=24;i++)
+	{
+		pathStorage[i]=0;
+	}
 }
 
-char shiftbits(signed char toShift, signed char shiftAmount)
+/* internal Pathplanning funtions */
+signed char shiftbits(signed char toShift, signed char shiftAmount)
 {
+	//secret stuff I need to rotate my direction clockwise(if I remember correctly)
     signed char temp=0;
     signed char cnt = 0;
     for(cnt=0;cnt<shiftAmount;cnt++)
@@ -74,7 +100,6 @@ char shiftbits(signed char toShift, signed char shiftAmount)
 
     return toShift;
 }
-
 void hasMoved(unsigned char direction)
 {
     //changes currentPosition according to direction WITH directional offset
@@ -94,82 +119,13 @@ void hasMoved(unsigned char direction)
 
 
 }
-
-char getNextDirection(){//note to self: change current position when direction got requiested to new postion when drive is completed
-   if(pathStorage[0])
-   {
-        pathStorage[0]--;
-        switch(pathStorage[1])
-        {
-            case 0x01: hasMoved(top);break;
-            case 0x02: hasMoved(right);directionOffset++;break;
-            case 0x04: hasMoved(down);directionOffset= directionOffset+2;break;
-            case 0x08: hasMoved(left);directionOffset= directionOffset+3;break;
-        }
-        directionOffset = directionOffset % 4;
-        return pathStorage[1];
-   }
-   return 0;
-}
-
-char hasBeenVisitedRelative(signed char direction)
-{//TODO: test, srsly test the fuck out of that stuff
-
-    direction=shiftbits(direction,directionOffset);//seems to work so far :D
-
-	switch (direction){
-	case 0x01: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x04);
-	case 0x02: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x08);
-	case 0x04: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x01);
-	case 0x08: return (mazeStorage[currentPosition[0]][currentPosition[1]] & 0x02);
-	default: return(0);//stupid conventions. I know what I do -.-
-	}
-
-    
-}
-
-void printCurrentPositionInfo()
-{
-
-	printf("\npos:%i:%i||Direction:",currentPosition[0],currentPosition[1]);
-	switch (directionOffset){
-	case 0x00: printf("North"); break;
-	case 0x01: printf("East"); break;
-	case 0x02: printf("South"); break;
-	case 0x03: printf("West"); break;
-	}
-}
-
-char visited(signed char x, signed char y){
-    return (mazeStorage[x][y]>>4);
-}
-
-void printPathStorage()
-{
-    signed char pathLength = pathStorage[0];
-    signed char cnt;
-    printf("\nLength of stored path is %i", pathLength);
-    for(cnt=1; cnt<=pathLength+1;cnt++)
-    {
-        switch(pathStorage[cnt]){
-            case 1: printf("\ntop");break;
-            case 2: printf("\nright");break;
-            case 4: printf("\ndown");break;
-            case 8: printf("\nleft");break;
-        }
-
-
-    }
-}
-
 void addToPath(char direction)
 {
     if(DEBUG){printf("\n added %i to path",direction);};
     pathStorage[0]++;
     pathStorage[(int)pathStorage[0]]=direction;
 }
-
-int hasDirection(char direction,unsigned char x,unsigned char y)
+signed char hasDirection(char direction,unsigned char x,unsigned char y)
 {
     char temp = mazeStorage[x][y];
 
@@ -191,8 +147,7 @@ int hasDirection(char direction,unsigned char x,unsigned char y)
     }
     return 0; // FAlls DAs PAssieren SOllte: WUT? FAlscher KNoten oder pfadabfrage und richtige richtung gewählt
 }
-
-int getLargestGreaterZero(char c1, char c2, char c3, char c4, char own){
+signed char getLargestValue(char c1, char c2, char c3, char c4, char own){
     if((c1>=0) && (c1>=c2) && (c1>=c3) && (c1>=c4) && (c1>=own))
     {return c1;}
     if((c2>=0) && (c2>=c1) && (c2>=c3) && (c2>=c4) && (c2>=own))
@@ -207,7 +162,61 @@ int getLargestGreaterZero(char c1, char c2, char c3, char c4, char own){
 
 }
 
-int getPathComplicated(signed char x1, signed char y1, signed char xDestination, signed char yDestination)
+/* semi-internal functions. Call if you know what you are doing */
+void setNode(signed char x, signed char y,char links, char unten, char rechts, char oben, char visited)
+{
+    char tempStorage;
+    char tempCount;
+    char switchCount =0;
+    for(tempCount=0; tempCount < directionOffset; tempCount++)
+    {
+        tempStorage = rechts;
+        rechts = oben;
+        oben = links;
+        links = unten;
+        unten = tempStorage;
+        switchCount++;
+    }
+    char temp = 0;
+    temp = temp +(visited <<4);
+    if(links   ==0x01)
+    {
+        if(x>0)
+        {
+            mazeStorage[(int)x-1][(int)y] = mazeStorage[(int)x-1][(int)y] | 2;
+        }
+        temp += 8;
+    }
+    if(unten   ==0x01)
+    {
+        if(y>0)
+        {
+            if(DEBUG){printf("\n setting %i:%i to %i",x,y-1,mazeStorage[x][y-1] | 1);};
+            mazeStorage[x][y-1] = mazeStorage[x][y-1] | 1;
+        }
+        temp += 4;
+    }
+    if(rechts  ==0x01)
+    {
+        if(x<13)
+        {
+            mazeStorage[(int)x+1][(int)y] = mazeStorage[(int)x+1][(int)y] | 8;
+        }
+        temp += 2;
+    }
+    if(oben    ==0x01)
+    {
+        if(y<13)
+        {
+            mazeStorage[(int)x][(int)y+1] = mazeStorage[(int)x][(int)y+1] | 4;
+        }
+        temp += 1;
+    }
+    if(DEBUG){printf("\nswitched %i times  setting %i:%i to (%iv:%io:%ir:%iu:%il):%i",switchCount,x,y,visited,oben,rechts,unten,links,temp);};
+
+    mazeStorage[x][y] = temp;
+}
+signed char getPathComplicated(signed char x1, signed char y1, signed char xDestination, signed char yDestination)
 {
     char mazeStart[14][14];
     char mazeEnd[14][14];
@@ -283,7 +292,7 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
                     if(rowY>0)
                         d=mazeStart[colX][rowY-1]-1;
                 }
-                mazeStart[colX][rowY]=getLargestGreaterZero(l,t,r,d,mazeStart[colX][rowY]);
+                mazeStart[colX][rowY]=getLargestValue(l,t,r,d,mazeStart[colX][rowY]);
 
             }
         }
@@ -314,7 +323,7 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
                     if(rowY>0)
                         d=mazeEnd[colX][rowY-1]-1;
                 }
-                mazeEnd[colX][rowY]=getLargestGreaterZero(l,t,r,d,mazeEnd[colX][rowY]);
+                mazeEnd[colX][rowY]=getLargestValue(l,t,r,d,mazeEnd[colX][rowY]);
 
             }
         }
@@ -429,7 +438,42 @@ int getPathComplicated(signed char x1, signed char y1, signed char xDestination,
     return 0; //aka no path found
 }
 
-int getPathTo(char xDestination, char yDestination)//more or less outdated, still usable for a fewer arguments call
+/* normal use funtions. These are the ones you should be using */
+signed char getNextDirection(){//note to self: move leftover moves 1 place to front
+   if(pathStorage[0])
+   {
+        pathStorage[0]--;
+        switch(pathStorage[1])
+        {
+            case 0x01: hasMoved(top);break;
+            case 0x02: hasMoved(right);directionOffset++;break;
+            case 0x04: hasMoved(down);directionOffset= directionOffset+2;break;
+            case 0x08: hasMoved(left);directionOffset= directionOffset+3;break;
+        }
+        directionOffset = directionOffset % 4;
+        return pathStorage[1];
+   }
+   return 0;
+}
+signed char hasBeenVisitedRelative(signed char direction)
+{//TODO: test, srsly test the fuck out of that stuff
+
+    direction=shiftbits(direction,directionOffset);//seems to work so far :D
+
+	switch (direction){
+    case 0x01: return (mazeStorage[currentPosition[0]][currentPosition[1]+1] >> 4);
+    case 0x02: return (mazeStorage[currentPosition[0]+1][currentPosition[1]] >> 4);
+    case 0x04: return (mazeStorage[currentPosition[0]][currentPosition[1]-1] >> 4);
+    case 0x08: return (mazeStorage[currentPosition[0]-14][currentPosition[1]] >> 4);
+	default: return(0);//stupid conventions. I know what I do -.-
+	}
+
+    
+}
+unsigned char visited(signed char x, signed char y){
+    return (mazeStorage[x][y]>>4);
+}
+signed char getPathTo(char xDestination, char yDestination)//more or less outdated, still usable for a fewer arguments call
 {
     signed char x1 = currentPosition[0];
     signed char y1 = currentPosition[1];
@@ -591,68 +635,43 @@ int getPathTo(char xDestination, char yDestination)//more or less outdated, stil
 
 
 }
-
-void setNode(signed char x, signed char y,char links, char unten, char rechts, char oben, char visited)
-{
-    char tempStorage;
-    char tempCount;
-    char switchCount =0;
-    for(tempCount=0; tempCount < directionOffset; tempCount++)
-    {
-        tempStorage = rechts;
-        rechts = oben;
-        oben = links;
-        links = unten;
-        unten = tempStorage;
-        switchCount++;
-    }
-    char temp = 0;
-    temp = temp +(visited <<4);
-    if(links   ==0x01)
-    {
-        if(x>0)
-        {
-            mazeStorage[(int)x-1][(int)y] = mazeStorage[(int)x-1][(int)y] | 2;
-        }
-        temp += 8;
-    }
-    if(unten   ==0x01)
-    {
-        if(y>0)
-        {
-            if(DEBUG){printf("\n setting %i:%i to %i",x,y-1,mazeStorage[x][y-1] | 1);};
-            mazeStorage[x][y-1] = mazeStorage[x][y-1] | 1;
-        }
-        temp += 4;
-    }
-    if(rechts  ==0x01)
-    {
-        if(x<13)
-        {
-            mazeStorage[(int)x+1][(int)y] = mazeStorage[(int)x+1][(int)y] | 8;
-        }
-        temp += 2;
-    }
-    if(oben    ==0x01)
-    {
-        if(y<13)
-        {
-            mazeStorage[(int)x][(int)y+1] = mazeStorage[(int)x][(int)y+1] | 4;
-        }
-        temp += 1;
-    }
-    if(DEBUG){printf("\nswitched %i times  setting %i:%i to (%iv:%io:%ir:%iu:%il):%i",switchCount,x,y,visited,oben,rechts,unten,links,temp);};
-
-    mazeStorage[x][y] = temp;
-}
-
-void setCurrentNode(char links, char unten, char rechts, char oben, char visited)
+void setCurrentNode(char links, char unten, char rechts, char oben)
 {
 
-    setNode(currentPosition[0], currentPosition[1], links, unten, rechts, oben, visited);
+    setNode(currentPosition[0], currentPosition[1], links, unten, rechts, oben, (mazeStorage[currentPosition[0]][currentPosition[1]]>>4)+1);
 
 }
 
+
+/* mah console functions: PLZ DONT TATSCH */
+void printCurrentPositionInfo()
+{
+
+    printf("\npos:%i:%i||Direction:",currentPosition[0],currentPosition[1]);
+    switch (directionOffset){
+    case 0x00: printf("North"); break;
+    case 0x01: printf("East"); break;
+    case 0x02: printf("South"); break;
+    case 0x03: printf("West"); break;
+    }
+}
+void printPathStorage()
+{
+    signed char pathLength = pathStorage[0];
+    signed char cnt;
+    printf("\nLength of stored path is %i", pathLength);
+    for(cnt=1; cnt<=pathLength+1;cnt++)
+    {
+        switch(pathStorage[cnt]){
+            case 1: printf("\ntop");break;
+            case 2: printf("\nright");break;
+            case 4: printf("\ndown");break;
+            case 8: printf("\nleft");break;
+        }
+
+
+    }
+}
 void printNode(char x, char y)
 {
     char temp1[10];
@@ -671,13 +690,11 @@ void printNode(char x, char y)
     //printf("\nX:Y(v:t:r:d:l)");
     printf("%i:%i(%s)", x,y,temp1);
 }
-
 void printNodeHelp()
 {
     printf("\nX:Y(v:t:r:d:l)");
 }
-
-void printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE()
+void printEVERYTHINGASBITMAP_FORCOMMANDLINE_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE()
 {
     int t1, t2,t3;
     t1=t2=t3=0;
@@ -709,7 +726,6 @@ void printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTIN
         printf("\n");
     }
 }
-
 void printFieldAsNumbers()
 {
     int t1,t2,t3;
@@ -734,7 +750,7 @@ int main(void)
     initialize();
 
     //setNode(x,y,links,unten,rechts,oben,visited);
-    //printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    //printEVERYTHINGASBITMAP_FORCOMMANDLINE_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
 
     setNode(2,1,1,1,1,1,1);
     setNode(3,1,1,1,1,1,1);
@@ -750,10 +766,11 @@ int main(void)
     setNode(8,5,1,1,1,0,1);
     setNode(8,6,1,1,1,0,1);
     setNode(6,4,1,0,0,1,1);
+    setNode(6,0,0,0,0,1,4);
     currentPosition[0]=6;
     currentPosition[1]=1;
     printf("\n%i",hasBeenVisitedRelative(right));
-    printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    printEVERYTHINGASBITMAP_FORCOMMANDLINE_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
     //directionOffset =1;//aka 1x rechts
     //printf(" ");
     //printNodeHelp();
@@ -764,9 +781,9 @@ int main(void)
     //printf("\n");
     //printNode(2,0);
     //printPathStorage();
-    //printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    //printEVERYTHINGASBITMAP_FORCOMMANDLINE_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
     //getPathComplicated(2,1,6,4);
-    //printEVERYTHINGASBITMAP_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
+    //printEVERYTHINGASBITMAP_FORCOMMANDLINE_OMGTHISNAMEISINALLCAPSHOWLONGDOESTHISFUNCTIONCONTINUETOBEEEEEEE();
     //printPathStorage();
 	printCurrentPositionInfo();
 	directionOffset++;
