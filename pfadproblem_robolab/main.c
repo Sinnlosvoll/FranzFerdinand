@@ -13,7 +13,7 @@ unsigned char    currentPosition[2];
 char    stop = 0;
 signed   char    directionOffset = 0;//number of times turned right
 
-/* FUNction prototypes */
+/* FUN.ction prototypes */
 
 void initialize();
 signed char shiftbits(signed char toShift, signed char shiftAmount);
@@ -40,19 +40,14 @@ void printFieldAsNumbers();
  *
  * NOT YET WORKING
  * - exploration
- * - executing a path
+ *
  *
  *
  */
 
 /* TODO:
  *
- * increment visited nbr when setNode is called
- *
- *
- *
- *
- *
+ * increment visited nbr when setNode is called // done: call setCurrentNode for this
  *
  *
  * */
@@ -439,7 +434,7 @@ signed char getPathComplicated(signed char x1, signed char y1, signed char xDest
 }
 
 /* normal use funtions. These are the ones you should be using */
-signed char getNextDirection(){//note to self: move leftover moves 1 place to front
+signed char getNextDirection(){//note to self: move leftover moves 1 place to front // still open
    if(pathStorage[0])
    {
         pathStorage[0]--;
