@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 5.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage2">
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<configuration artifactName="robo" buildProperties="" description="" id="0.988724235.401012102" name="Simulation" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+			<folderInfo id="0.988724235.401012102." name="/" resourcePath="">
+				<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.1897134007" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
+					<targetPlatform binaryParser="org.eclipse.cdt.core.MachO64;org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.PE;org.eclipse.cdt.core.SOM;org.eclipse.cdt.core.GNU_ELF;org.eclipse.cdt.core.Cygwin_PE;org.eclipse.cdt.core.XCOFF32" id="org.eclipse.cdt.build.core.prefbase.toolchain.1897134007.710773829" name=""/>
+					<builder autoBuildTarget="all" cleanBuildTarget="simulation-clean" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.settings.default.builder.683360655" incrementalBuildTarget="simulation" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+					<tool id="org.eclipse.cdt.build.core.settings.holder.libs.339684669" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
+					<tool id="org.eclipse.cdt.build.core.settings.holder.944266047" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+						<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1239736248" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+					</tool>
+					<tool id="org.eclipse.cdt.build.core.settings.holder.2052223839" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
+						<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1182388257" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+					</tool>
+					<tool id="org.eclipse.cdt.build.core.settings.holder.2128001244" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+						<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.86476812" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+							<listOptionValue builtIn="false" value="C:/cygwin/nxtOSEK/ecrobot/c"/>
+							<listOptionValue builtIn="false" value="C:/cygwin/nxtOSEK/toppers_osek/kernel"/>
+							<listOptionValue builtIn="false" value="C:/cygwin/nxtOSEK/toppers_osek/include"/>
+							<listOptionValue builtIn="false" value="C:/cygwin/usr/include"/>
+							<listOptionValue builtIn="false" value="&quot;${workspace_loc:/robo/h}&quot;"/>
+							<listOptionValue builtIn="false" value="&quot;${workspace_loc:/simulation/h}&quot;"/>
+						</option>
+						<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.774996534" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+					</tool>
+				</toolChain>
+			</folderInfo>
+		</configuration>
+	</storageModule>
+</cproject>
